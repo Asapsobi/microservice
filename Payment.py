@@ -39,7 +39,9 @@ class Order (HashModel) :
 
 @app.get ("/orders/{pk}")
 def get(pk : str) :
-    return Order.get(pk) 
+    order= Order.get (pk)
+    redis.xadd("refund_order",order.dict , "*")
+    return order
 
 @app.post("/orders")
 async def create(request : Request , background_tasks : BackgroundTasks) :
@@ -62,6 +64,7 @@ async def create(request : Request , background_tasks : BackgroundTasks) :
     return order
 
 def order_completed(order:Order) :
-    time.sleep (20)
+    time.sleep (1)
     order.status="completed"
     order.save()
+    redis.xadd("order_completed",order.dict(),"*")
